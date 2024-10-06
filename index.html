@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>百家預測系統</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #343a40;
+        color: #f8f9fa;
+      }
+
+      .container {
+        max-width: 600px;
+        margin: 20px auto;
+        padding: 20px;
+        background-color: #495057;
+        border-radius: 8px;
+      }
+
+      h1,
+      h3 {
+        text-align: center;
+      }
+
+      .section {
+        margin-bottom: 20px;
+      }
+
+      label,
+      select,
+      input {
+        display: block;
+        width: 100%;
+        padding: 10px;
+        margin-top: 10px;
+        border-radius: 5px;
+        border: 1px solid #ff7f50;
+        background-color: #212529;
+        color: #f8f9fa;
+      }
+
+      button {
+        padding: 10px 20px;
+        background-color: #ff7f50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-top: 10px;
+      }
+
+      button:hover {
+        background-color: #e83e8c;
+      }
+
+      #betResult,
+      #predictionResult {
+        text-align: center;
+        margin-top: 20px;
+      }
+
+      #historyList {
+        list-style-type: none;
+        padding: 0;
+        margin-top: 10px;
+      }
+
+      #historyList li {
+        background-color: #212529;
+        margin: 5px 0;
+        padding: 10px;
+        border-radius: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>百家預測系統</h1>
+
+      <div class="section">
+        <label for="platform">選擇遊玩的百家樂平台：</label>
+        <select id="platform">
+          <option value="DG真人">DG真人</option>
+          <option value="MT真人">MT真人</option>
+          <option value="SA真人">SA真人</option>
+          <option value="歐博真人">歐博真人</option>
+        </select>
+      </div>
+
+      <div class="section">
+        <label for="room">選擇房號：</label>
+        <select id="room"></select>
+      </div>
+
+      <div class="section">
+        <label for="balance">輸入本金：</label>
+        <input type="number" id="balance" placeholder="請輸入數字" />
+      </div>
+
+      <div class="section">
+        <label for="strategy">選擇下注策略：</label>
+        <select id="strategy">
+          <option value="天門打法">天門打法</option>
+          <option value="馬丁格爾玩法">馬丁格爾玩法</option>
+        </select>
+      </div>
+
+      <button onclick="calculateBet()">計算建議下注金額</button>
+      <div id="betResult"></div>
+
+      <div class="section">
+        <label for="playerPoints">輸入閒的點數：</label>
+        <input type="number" id="playerPoints" placeholder="0-9之間的數字" />
+      </div>
+
+      <div class="section">
+        <label for="bankerPoints">輸入莊的點數：</label>
+        <input type="number" id="bankerPoints" placeholder="0-9之間的數字" />
+      </div>
+
+      <button onclick="predictResult()">開始預測</button>
+      <div id="predictionResult"></div>
+
+      <h3>歷史記錄：</h3>
+      <ul id="historyList"></ul>
+    </div>
+
+    <script>
+      const roomOptions = {
+        DG真人: ["D01", "D02", "D03", "D05", "D06"],
+        MT真人: ["百家廳1", "百家廳2", "百家廳3", "百家廳3A"],
+        SA真人: ["百家樂D01", "百家樂D02", "百家樂D03"],
+        歐博真人: ["快速百家樂Q001", "性感百家樂B501"],
+      };
+
+      document
+        .getElementById("platform")
+        .addEventListener("change", updateRooms);
+      updateRooms();
+
+      function updateRooms() {
+        const platform = document.getElementById("platform").value;
+        const roomSelect = document.getElementById("room");
+        roomSelect.innerHTML = ""; // 清空現有選項
+
+        const rooms = roomOptions[platform];
+        rooms.forEach((room) => {
+          const option = document.createElement("option");
+          option.value = room;
+          option.textContent = room;
+          roomSelect.appendChild(option);
+        });
+      }
+
+      function calculateBet() {
+        const balance = parseInt(document.getElementById("balance").value);
+        const strategy = document.getElementById("strategy").value;
+
+        if (isNaN(balance) || balance <= 0) {
+          document.getElementById("betResult").textContent = "請輸入有效的本金";
+          return;
+        }
+
+        let betSequence = [];
+        if (strategy === "天門打法") {
+          if (balance < 100 + 300 + 700 + 1500 + 3100) {
+            document.getElementById("betResult").textContent =
+              "本金不足以進行天門打法";
+            return;
+          }
+          betSequence = [100, 300, 700, 1500, 3100];
+        } else if (strategy === "馬丁格爾玩法") {
+          let bet = 100;
+          let totalBet = 0;
+          while (totalBet + bet <= balance) {
+            betSequence.push(bet);
+            totalBet += bet;
+            bet *= 2;
+          }
+        }
+
+        document.getElementById("betResult").textContent =
+          "建議下注金額序列: " + betSequence.join(" -> ");
+      }
+
+      function predictResult() {
+        const playerPoints = parseInt(
+          document.getElementById("playerPoints").value
+        );
+        const bankerPoints = parseInt(
+          document.getElementById("bankerPoints").value
+        );
+
+        if (
+          isNaN(playerPoints) ||
+          isNaN(bankerPoints) ||
+          playerPoints < 0 ||
+          playerPoints > 9 ||
+          bankerPoints < 0 ||
+          bankerPoints > 9
+        ) {
+          document.getElementById("predictionResult").textContent =
+            "請輸入有效的點數";
+          return;
+        }
+
+        const playerWinCases = [
+          [0, 0],
+          [0, 1],
+          [1, 0],
+          [2, 0],
+          [3, 0],
+          [3, 3],
+          [4, 0],
+          [5, 0],
+          [6, 6],
+          [7, 1],
+          [9, 0],
+          [9, 9],
+          [8, 1],
+        ];
+        const bankerWinCases = [
+          [3, 1],
+          [3, 2],
+          [4, 4],
+          [5, 1],
+          [6, 1],
+          [7, 0],
+          [7, 5],
+          [8, 2],
+          [9, 1],
+          [9, 4],
+        ];
+
+        let result = "無效數據";
+        if (
+          playerWinCases.some(
+            (pair) => pair[0] === playerPoints && pair[1] === bankerPoints
+          )
+        ) {
+          result = "閒";
+        } else if (
+          bankerWinCases.some(
+            (pair) => pair[0] === playerPoints && pair[1] === bankerPoints
+          )
+        ) {
+          result = "莊";
+        }
+
+        document.getElementById(
+          "predictionResult"
+        ).textContent = `預測結果: ${result}`;
+
+        const historyItem = `${new Date().toLocaleString()} | ${
+          document.getElementById("platform").value
+        } - ${
+          document.getElementById("room").value
+        } - ${playerPoints}:${bankerPoints} - ${result}`;
+        const li = document.createElement("li");
+        li.textContent = historyItem;
+        document.getElementById("historyList").appendChild(li);
+
+        // 清空輸入框
+        document.getElementById("playerPoints").value = "";
+        document.getElementById("bankerPoints").value = "";
+      }
+    </script>
+  </body>
+</html>
